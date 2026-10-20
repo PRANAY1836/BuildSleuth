@@ -1,4 +1,4 @@
-﻿"""BuildSleuth Streamlit Workbench â€” Stage S5 Verified Implementation."""
+﻿"""BuildSleuth Streamlit Community Cloud Interface — Stage S5 Verified Implementation."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ from pathlib import Path
 
 import streamlit as st
 
-# 1. Load server-side secrets into environment if configured in Streamlit
 try:
     if "GEMINI_API_KEY" in st.secrets:
         os.environ["GEMINI_API_KEY"] = st.secrets["GEMINI_API_KEY"]
@@ -29,8 +28,8 @@ from app.security.rate_limiter import SQLiteRateLimiter
 from app.storage import InvestigationStore
 
 st.set_page_config(
-    page_title="BuildSleuth â€” CI Failure Intelligence",
-    page_icon="ðŸ›¡ï¸",
+    page_title="BuildSleuth — CI Failure Intelligence",
+    page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -56,28 +55,28 @@ rate_limiter = SQLiteRateLimiter(
 if "investigation_history" not in st.session_state:
     st.session_state["investigation_history"] = []
 
-st.sidebar.title("ðŸ›¡ï¸ BuildSleuth")
+st.sidebar.title("BuildSleuth")
 st.sidebar.caption("Evidence-Grounded CI Intelligence")
 
 nav_mode = st.sidebar.radio(
     "Navigation",
     [
-        "ðŸ” New Investigation",
-        "ðŸ”Ž Retrieval Inspector",
-        "ðŸŒ Multi-Hop Graph Explorer",
-        "ðŸ“ˆ Evaluation Benchmark",
-        "ðŸ—‚ï¸ Investigation History",
-        "ðŸ“Š System & Config Status",
+        "New Investigation",
+        "Retrieval Inspector",
+        "Multi-Hop Graph Explorer",
+        "Evaluation Benchmark",
+        "Investigation History",
+        "System & Config Status",
     ],
 )
 
 st.sidebar.markdown("---")
 gemini_ready = bool(os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY)
 st.sidebar.markdown(
-    f"**LLM Status**: {'ðŸŸ¢ Gemini API Configured' if gemini_ready else 'ðŸŸ¡ Deterministic Demo Mode (No API Key)'}"
+    f"**LLM Status**: {'Gemini API Configured' if gemini_ready else 'Deterministic Demo Mode'}"
 )
 st.sidebar.markdown(
-    "**Architecture**: Hybrid RAG (Dense + BM25 + RRF) + Bounded Agent + GraphRAG + Citation Verifier."
+    "**Architecture**: Hybrid RAG + Bounded Agent + GraphRAG + Citation Verifier."
 )
 
 
@@ -90,9 +89,8 @@ def render_landing_and_form() -> None:
 
     if not gemini_ready:
         st.info(
-            "â„¹ï¸ **Deterministic Demo Mode Active**: `GEMINI_API_KEY` is not configured. "
-            "BuildSleuth will execute full Hybrid RAG (Dense + BM25 + RRF + Reranker) and deterministic "
-            "root-cause synthesis with verified line citations."
+            "ℹ️ **Deterministic Demo Mode Active**: `GEMINI_API_KEY` is not configured. "
+            "BuildSleuth will execute full Hybrid RAG and deterministic root-cause synthesis with verified line citations."
         )
 
     with st.form("investigation_form"):
@@ -106,13 +104,11 @@ def render_landing_and_form() -> None:
             use_gemini_toggle = st.checkbox(
                 "Enable Gemini API Reasoning",
                 value=True,
-                help="Uses Google Gemini Developer API when GEMINI_API_KEY is configured; falls back safely otherwise.",
             )
         with col3:
             use_agent_toggle = st.checkbox(
                 "Use Bounded Agentic Workflow",
                 value=True,
-                help="Runs evidence sufficiency checks and bounded query reformulation loops.",
             )
 
         question_input = st.text_input(
@@ -154,12 +150,12 @@ def render_landing_and_form() -> None:
         allowed, remaining = rate_limiter.check_rate_limit(client_bucket)
         if not allowed:
             st.error(
-                "âš ï¸ Rate limit exceeded (Max 15 investigations per 15 minutes). Please wait before submitting again."
+                "⚠️ Rate limit exceeded (Max 15 investigations per 15 minutes). Please wait before submitting again."
             )
             return
 
         with st.spinner(
-            f"Executing Hybrid RAG & Evidence Verification... (Remaining window quota: {remaining})"
+            f"Executing Hybrid RAG & Evidence Verification... (Remaining quota: {remaining})"
         ):
             try:
                 t0 = time.perf_counter()
@@ -173,15 +169,21 @@ def render_landing_and_form() -> None:
 
                 agent_trace = None
                 if use_agent_toggle:
-                    agent_result = run_agentic_investigation(log_text=log_input, question=question_input)
-                    response = agent_result.diagnosis
-                    agent_trace = agent_result
+                    try:
+                        agent_result = run_agentic_investigation(log_text=log_input, question=question_input)
+                        response = (
+                            getattr(agent_result, "diagnosis", None)
+                            or getattr(agent_result, "final_diagnosis", None)
+                            or diagnose_full(request, settings=settings)
+                        )
+                        agent_trace = agent_result
+                    except Exception:
+                        response = diagnose_full(request, settings=settings)
                 else:
                     response = diagnose_full(request, settings=settings)
 
                 elapsed_ms = round((time.perf_counter() - t0) * 1000, 2)
 
-                # Persist record in SQLite InvestigationStore
                 try:
                     investigation_store.save_investigation(request, response)
                 except Exception:
@@ -216,7 +218,7 @@ def render_landing_and_form() -> None:
 
 def render_diagnosis_workspace(res, agent_trace=None) -> None:
     st.markdown("---")
-    st.header("ðŸ“‹ Diagnosis Workspace")
+    st.header("Diagnosis Workspace")
 
     col_a, col_b, col_c = st.columns(3)
     with col_a:
@@ -264,19 +266,19 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
         st.markdown("#### Recommended Actions")
         if res.recommended_actions:
             for act in res.recommended_actions:
-                st.markdown(f"âœ… {act}")
+                st.markdown(f"✅ {act}")
         else:
             st.caption("No recommendations generated.")
 
         st.markdown("#### Missing Information & Limitations")
         for lim in res.limitations:
-            st.markdown(f"âš ï¸ {lim}")
+            st.markdown(f"⚠️ {lim}")
 
-    if agent_trace is not None:
+    if agent_trace is not None and hasattr(agent_trace, "steps"):
         st.markdown("---")
-        st.subheader("ðŸ¤– Bounded Agent Execution Trace")
+        st.subheader("Bounded Agent Execution Trace")
         st.caption(
-            f"Iterations: {agent_trace.iterations} | Evidence Sufficient: `{agent_trace.evidence_sufficient}`"
+            f"Iterations: {getattr(agent_trace, 'iterations', 1)} | Evidence Sufficient: `{getattr(agent_trace, 'evidence_sufficient', True)}`"
         )
         for step in agent_trace.steps:
             st.markdown(
@@ -284,7 +286,7 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
             )
 
     st.markdown("---")
-    st.subheader("ðŸ”Ž Retrieved Evidence & Verified Citations")
+    st.subheader("Retrieved Evidence & Verified Citations")
     if res.evidence_chunks:
         for chunk in res.evidence_chunks:
             with st.expander(
@@ -307,12 +309,7 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
 
 
 def render_retrieval_inspector() -> None:
-    st.title("ðŸ”Ž Hybrid Retrieval Inspector")
-    st.markdown(
-        "Inspect intermediate scores from Dense Semantic search, BM25 sparse matching, "
-        "Reciprocal Rank Fusion (RRF), and Cross-Interaction Reranking."
-    )
-
+    st.title("Hybrid Retrieval Inspector")
     with st.form("inspect_form"):
         query = st.text_input("Query", value="ModuleNotFoundError pandas")
         log_text = st.text_area(
@@ -369,12 +366,7 @@ def render_retrieval_inspector() -> None:
 
 
 def render_graph_explorer() -> None:
-    st.title("ðŸŒ Multi-Hop GraphRAG Explorer")
-    st.markdown(
-        "Explore entity relationships connecting Repositories, Commits, Files, Modules, "
-        "Dependencies, Jobs, and Failed Steps stored in SQLite."
-    )
-
+    st.title("Multi-Hop GraphRAG Explorer")
     with st.form("graph_query_form"):
         start_entity = st.text_input("Start Entity ID", value="repo_1")
         max_hops = st.slider("Max Traversal Hops", 1, 3, 2)
@@ -382,7 +374,7 @@ def render_graph_explorer() -> None:
 
     if query_graph:
         traversal = graph_store.multi_hop_query(start_entity.strip(), max_hops=max_hops)
-        st.subheader(f"Traversal Results from '{start_entity}' (Max Hops: {max_hops})")
+        st.subheader(f"Traversal Results from '{start_entity}'")
         if traversal:
             for item in traversal:
                 st.markdown(
@@ -394,12 +386,7 @@ def render_graph_explorer() -> None:
 
 
 def render_evaluation_benchmark() -> None:
-    st.title("ðŸ“ˆ Multi-Metric Evaluation Benchmark")
-    st.markdown(
-        "Evaluate BuildSleuth against the labeled regression benchmark (`eval/dataset.json`). "
-        "Measures Category Accuracy separately from Citation Precision, Abstention Accuracy, and Latency."
-    )
-
+    st.title("Multi-Metric Evaluation Benchmark")
     dataset_path = Path("eval/dataset.json")
     if not dataset_path.exists():
         st.error("eval/dataset.json not found in repository.")
@@ -453,7 +440,7 @@ def render_evaluation_benchmark() -> None:
                     "Case ID": case_id,
                     "Expected": expected_cat,
                     "Predicted": res.failure_category,
-                    "Match": "âœ…" if cat_match else "âŒ",
+                    "Match": "✅" if cat_match else "❌",
                     "Confidence": res.confidence_level,
                     "Citation Precision": f"{cit_prec * 100:.0f}%",
                     "Latency (ms)": dt_ms,
@@ -475,11 +462,7 @@ def render_evaluation_benchmark() -> None:
 
 
 def render_history_page() -> None:
-    st.title("ðŸ—‚ï¸ Investigation History")
-    st.markdown(
-        "Audit log of investigations executed in this session and persisted in SQLite (`data/buildsleuth.db`). "
-        "Note: On Streamlit Community Cloud, local SQLite storage is ephemeral across container restarts."
-    )
+    st.title("Investigation History")
     history = st.session_state.get("investigation_history", [])
     if history:
         st.subheader("Current Session Runs")
@@ -518,16 +501,15 @@ def render_status_page() -> None:
         st.json(summary["integrations"])
 
 
-if nav_mode == "ðŸ” New Investigation":
+if nav_mode == "New Investigation":
     render_landing_and_form()
-elif nav_mode == "ðŸ”Ž Retrieval Inspector":
+elif nav_mode == "Retrieval Inspector":
     render_retrieval_inspector()
-elif nav_mode == "ðŸŒ Multi-Hop Graph Explorer":
+elif nav_mode == "Multi-Hop Graph Explorer":
     render_graph_explorer()
-elif nav_mode == "ðŸ“ˆ Evaluation Benchmark":
+elif nav_mode == "Evaluation Benchmark":
     render_evaluation_benchmark()
-elif nav_mode == "ðŸ—‚ï¸ Investigation History":
+elif nav_mode == "Investigation History":
     render_history_page()
 else:
     render_status_page()
-
