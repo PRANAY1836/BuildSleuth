@@ -1,0 +1,86 @@
+{
+  "dataset_name": "buildsleuth_ci_failures_v1",
+  "total_cases": 10,
+  "cases": [
+    {
+      "case_id": "case_01",
+      "category": "missing_dependency",
+      "question": "Why did the test build fail?",
+      "log_text": "Traceback:\n  File 'app/main.py', line 2\n    import pandas as lp\nModuleNotFoundError: No module named 'pandas'",
+      "expected_root_cause_contains": "pandas",
+      "expected_category": "missing_dependency"
+    },
+    {
+      "case_id": "case_02",
+      "category": "syntax_error",
+      "question": "What caused the parsing error?",
+      "log_text": "File 'app/models.py', line 45\n    def validate() -> None\n                        ^\nSyntaxError: invalid syntax",
+      "expected_root_cause_contains": "SyntaxError",
+      "expected_category": "syntax_error"
+    },
+    {
+      "case_id": "case_03",
+      "category": "test_failure",
+      "question": "Why did pytest fail?",
+      "log_text": "FAILED tests/test_api.py::test_health - AssertionError: assert 500 == 200",
+      "expected_root_cause_contains": "AssertionError",
+      "expected_category": "test_failure"
+    },
+    {
+      "case_id": "case_04",
+      "category": "configuration_error",
+      "question": "Why did the app crash on startup?",
+      "log_text": "KeyError: 'DATABASE_URL' not found in environment variables.",
+      "expected_root_cause_contains": "DATABASE_URL",
+      "expected_category": "configuration_error"
+    },
+    {
+      "case_id": "case_05",
+      "category": "dependency_conflict",
+      "question": "Why did pip fail to install packages?",
+      "log_text": "ResolutionImpossible: Too many conflicting dependencies found for fastapi==0.111.0",
+      "expected_root_cause_contains": "ResolutionImpossible",
+      "expected_category": "dependency_conflict"
+    },
+    {
+      "case_id": "case_06",
+      "category": "network_or_service_failure",
+      "question": "Why did the API request time out?",
+      "log_text": "ConnectionError: HTTPSConnectionPool(host='api.github.com', port=443): Max retries exceeded (Caused by ConnectTimeoutError)",
+      "expected_root_cause_contains": "ConnectionError",
+      "expected_category": "network_or_service_failure"
+    },
+    {
+      "case_id": "case_07",
+      "category": "lint_or_format_failure",
+      "question": "Why did ruff fail the lint check?",
+      "log_text": "ruff check failed: app/main.py:12:5: F401 'os' imported but unused",
+      "expected_root_cause_contains": "F401",
+      "expected_category": "lint_or_format_failure"
+    },
+    {
+      "case_id": "case_08",
+      "category": "unknown_or_insufficient_evidence",
+      "question": "What caused this unknown build termination?",
+      "log_text": "Build step finished with exit code 137.",
+      "expected_root_cause_contains": "Insufficient evidence",
+      "expected_category": "unknown_or_insufficient_evidence"
+    },
+    {
+      "case_id": "case_09",
+      "category": "missing_dependency",
+      "question": "Why did Node.js build fail?",
+      "log_text": "Error: Cannot find module 'express' requiring index.js",
+      "expected_root_cause_contains": "express",
+      "expected_category": "missing_dependency"
+    },
+    {
+      "case_id": "case_10",
+      "category": "test_failure",
+      "question": "Why did the integration test fail?",
+      "log_text": "E   assert False + where False = check_auth_token('invalid')",
+      "expected_root_cause_contains": "assert",
+      "expected_category": "test_failure"
+    }
+  ]
+}
