@@ -173,7 +173,7 @@ def render_landing_and_form() -> None:
 
                 agent_trace = None
                 if use_agent_toggle:
-                    agent_result = run_agentic_investigation(request)
+                    agent_result = run_agentic_investigation(log_text=log_input, question=question_input)
                     response = agent_result.diagnosis
                     agent_trace = agent_result
                 else:
