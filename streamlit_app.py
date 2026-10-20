@@ -1,4 +1,4 @@
-"""BuildSleuth Streamlit Workbench — Stage S5 Verified Implementation."""
+﻿"""BuildSleuth Streamlit Workbench â€” Stage S5 Verified Implementation."""
 
 from __future__ import annotations
 
@@ -29,8 +29,8 @@ from app.security.rate_limiter import SQLiteRateLimiter
 from app.storage import InvestigationStore
 
 st.set_page_config(
-    page_title="BuildSleuth — CI Failure Intelligence",
-    page_icon="🛡️",
+    page_title="BuildSleuth â€” CI Failure Intelligence",
+    page_icon="ðŸ›¡ï¸",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -56,25 +56,25 @@ rate_limiter = SQLiteRateLimiter(
 if "investigation_history" not in st.session_state:
     st.session_state["investigation_history"] = []
 
-st.sidebar.title("🛡️ BuildSleuth")
+st.sidebar.title("ðŸ›¡ï¸ BuildSleuth")
 st.sidebar.caption("Evidence-Grounded CI Intelligence")
 
 nav_mode = st.sidebar.radio(
     "Navigation",
     [
-        "🔍 New Investigation",
-        "🔎 Retrieval Inspector",
-        "🌐 Multi-Hop Graph Explorer",
-        "📈 Evaluation Benchmark",
-        "🗂️ Investigation History",
-        "📊 System & Config Status",
+        "ðŸ” New Investigation",
+        "ðŸ”Ž Retrieval Inspector",
+        "ðŸŒ Multi-Hop Graph Explorer",
+        "ðŸ“ˆ Evaluation Benchmark",
+        "ðŸ—‚ï¸ Investigation History",
+        "ðŸ“Š System & Config Status",
     ],
 )
 
 st.sidebar.markdown("---")
 gemini_ready = bool(os.environ.get("GEMINI_API_KEY") or settings.GEMINI_API_KEY)
 st.sidebar.markdown(
-    f"**LLM Status**: {'🟢 Gemini API Configured' if gemini_ready else '🟡 Deterministic Demo Mode (No API Key)'}"
+    f"**LLM Status**: {'ðŸŸ¢ Gemini API Configured' if gemini_ready else 'ðŸŸ¡ Deterministic Demo Mode (No API Key)'}"
 )
 st.sidebar.markdown(
     "**Architecture**: Hybrid RAG (Dense + BM25 + RRF) + Bounded Agent + GraphRAG + Citation Verifier."
@@ -90,7 +90,7 @@ def render_landing_and_form() -> None:
 
     if not gemini_ready:
         st.info(
-            "ℹ️ **Deterministic Demo Mode Active**: `GEMINI_API_KEY` is not configured. "
+            "â„¹ï¸ **Deterministic Demo Mode Active**: `GEMINI_API_KEY` is not configured. "
             "BuildSleuth will execute full Hybrid RAG (Dense + BM25 + RRF + Reranker) and deterministic "
             "root-cause synthesis with verified line citations."
         )
@@ -154,7 +154,7 @@ def render_landing_and_form() -> None:
         allowed, remaining = rate_limiter.check_rate_limit(client_bucket)
         if not allowed:
             st.error(
-                "⚠️ Rate limit exceeded (Max 15 investigations per 15 minutes). Please wait before submitting again."
+                "âš ï¸ Rate limit exceeded (Max 15 investigations per 15 minutes). Please wait before submitting again."
             )
             return
 
@@ -216,7 +216,7 @@ def render_landing_and_form() -> None:
 
 def render_diagnosis_workspace(res, agent_trace=None) -> None:
     st.markdown("---")
-    st.header("📋 Diagnosis Workspace")
+    st.header("ðŸ“‹ Diagnosis Workspace")
 
     col_a, col_b, col_c = st.columns(3)
     with col_a:
@@ -264,17 +264,17 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
         st.markdown("#### Recommended Actions")
         if res.recommended_actions:
             for act in res.recommended_actions:
-                st.markdown(f"✅ {act}")
+                st.markdown(f"âœ… {act}")
         else:
             st.caption("No recommendations generated.")
 
         st.markdown("#### Missing Information & Limitations")
         for lim in res.limitations:
-            st.markdown(f"⚠️ {lim}")
+            st.markdown(f"âš ï¸ {lim}")
 
     if agent_trace is not None:
         st.markdown("---")
-        st.subheader("🤖 Bounded Agent Execution Trace")
+        st.subheader("ðŸ¤– Bounded Agent Execution Trace")
         st.caption(
             f"Iterations: {agent_trace.iterations} | Evidence Sufficient: `{agent_trace.evidence_sufficient}`"
         )
@@ -284,7 +284,7 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
             )
 
     st.markdown("---")
-    st.subheader("🔎 Retrieved Evidence & Verified Citations")
+    st.subheader("ðŸ”Ž Retrieved Evidence & Verified Citations")
     if res.evidence_chunks:
         for chunk in res.evidence_chunks:
             with st.expander(
@@ -307,7 +307,7 @@ def render_diagnosis_workspace(res, agent_trace=None) -> None:
 
 
 def render_retrieval_inspector() -> None:
-    st.title("🔎 Hybrid Retrieval Inspector")
+    st.title("ðŸ”Ž Hybrid Retrieval Inspector")
     st.markdown(
         "Inspect intermediate scores from Dense Semantic search, BM25 sparse matching, "
         "Reciprocal Rank Fusion (RRF), and Cross-Interaction Reranking."
@@ -369,7 +369,7 @@ def render_retrieval_inspector() -> None:
 
 
 def render_graph_explorer() -> None:
-    st.title("🌐 Multi-Hop GraphRAG Explorer")
+    st.title("ðŸŒ Multi-Hop GraphRAG Explorer")
     st.markdown(
         "Explore entity relationships connecting Repositories, Commits, Files, Modules, "
         "Dependencies, Jobs, and Failed Steps stored in SQLite."
@@ -394,7 +394,7 @@ def render_graph_explorer() -> None:
 
 
 def render_evaluation_benchmark() -> None:
-    st.title("📈 Multi-Metric Evaluation Benchmark")
+    st.title("ðŸ“ˆ Multi-Metric Evaluation Benchmark")
     st.markdown(
         "Evaluate BuildSleuth against the labeled regression benchmark (`eval/dataset.json`). "
         "Measures Category Accuracy separately from Citation Precision, Abstention Accuracy, and Latency."
@@ -453,7 +453,7 @@ def render_evaluation_benchmark() -> None:
                     "Case ID": case_id,
                     "Expected": expected_cat,
                     "Predicted": res.failure_category,
-                    "Match": "✅" if cat_match else "❌",
+                    "Match": "âœ…" if cat_match else "âŒ",
                     "Confidence": res.confidence_level,
                     "Citation Precision": f"{cit_prec * 100:.0f}%",
                     "Latency (ms)": dt_ms,
@@ -475,7 +475,7 @@ def render_evaluation_benchmark() -> None:
 
 
 def render_history_page() -> None:
-    st.title("🗂️ Investigation History")
+    st.title("ðŸ—‚ï¸ Investigation History")
     st.markdown(
         "Audit log of investigations executed in this session and persisted in SQLite (`data/buildsleuth.db`). "
         "Note: On Streamlit Community Cloud, local SQLite storage is ephemeral across container restarts."
@@ -518,15 +518,16 @@ def render_status_page() -> None:
         st.json(summary["integrations"])
 
 
-if nav_mode == "🔍 New Investigation":
+if nav_mode == "ðŸ” New Investigation":
     render_landing_and_form()
-elif nav_mode == "🔎 Retrieval Inspector":
+elif nav_mode == "ðŸ”Ž Retrieval Inspector":
     render_retrieval_inspector()
-elif nav_mode == "🌐 Multi-Hop Graph Explorer":
+elif nav_mode == "ðŸŒ Multi-Hop Graph Explorer":
     render_graph_explorer()
-elif nav_mode == "📈 Evaluation Benchmark":
+elif nav_mode == "ðŸ“ˆ Evaluation Benchmark":
     render_evaluation_benchmark()
-elif nav_mode == "🗂️ Investigation History":
+elif nav_mode == "ðŸ—‚ï¸ Investigation History":
     render_history_page()
 else:
     render_status_page()
+
